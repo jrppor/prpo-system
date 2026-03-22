@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.jirapat.prpo.entity.PurchaseRequest;
+import com.jirapat.prpo.entity.PurchaseRequestStatus;
 
 @Repository
 public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest, UUID> {
@@ -20,6 +21,13 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
 
     @EntityGraph(attributePaths = {"requester", "items"})
     Optional<PurchaseRequest> findById(UUID id);
+
+    // Load requester eagerly for list responses to avoid LazyInitializationException during mapping.
+    // If you prefer an explicit query instead, use:
+    // @EntityGraph(attributePaths = "requester")
+    // @Query("SELECT pr FROM PurchaseRequest pr WHERE pr.status = :status")
+    @EntityGraph(attributePaths = "requester")
+    Page<PurchaseRequest> findByStatus(PurchaseRequestStatus status, Pageable pageable);
 
     // @Query("SELECT pr FROM PurchaseRequest pr JOIN FETCH pr.requester")
     // Page<PurchaseRequest> findAllWithRequester(Pageable pageable);
