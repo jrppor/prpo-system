@@ -19,6 +19,7 @@ import com.jirapat.prpo.entity.ApprovalHistory;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.PurchaseRequestItem;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
+import com.jirapat.prpo.entity.Role;
 import com.jirapat.prpo.entity.User;
 import com.jirapat.prpo.exception.ResourceNotFoundException;
 import com.jirapat.prpo.mapper.ApprovalHistoryMapper;
@@ -51,6 +52,14 @@ public class PurchaseRequestService {
         log.info("Fetching Purchase request by id: {}", id);
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
         return purchaseRequestMapper.toPurchaseRequestResponse(purchaseRequest);
+    }
+
+    public Page<PurchaseRequestResponse> getPendingApproval(Pageable pageable) {
+        User currentUser = securityService.getCurrentUser();
+        PurchaseRequestStatus pendingStatus = getPendingApprovalStatus(currentUser.getRole());
+
+        return purchaseRequestRepository.findByStatus(pendingStatus, pageable)
+                .map(purchaseRequestMapper::toListResponse);
     }
 
     @Transactional
@@ -108,6 +117,57 @@ public class PurchaseRequestService {
         log.info("Purchase request deleted successfully: {}", id);
     }
 
+    @Transactional
+    public PurchaseRequestResponse submitPurchaseRequest(UUID id) {
+        User currentUser = securityService.getCurrentUser();
+        log.info("Submitting purchase request {} by user: {}", id, currentUser.getEmail());
+
+        PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+
+        if (purchaseRequest.getStatus() != PurchaseRequestStatus.DRAFT) {
+            throw new IllegalStateException("Only DRAFT purchase requests can be submitted");
+        }
+
+        purchaseRequest.setStatus(PurchaseRequestStatus.SUBMITTED);
+        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        return purchaseRequestMapper.toPurchaseRequestResponse(saved);
+    }
+
+    public List<ApprovalHistoryResponse> getApprovalHistories(UUID purchaseRequestId) {
+        findPurchaseRequestById(purchaseRequestId);
+        List<ApprovalHistory> histories = approvalHistoryRepository
+                .findByPrId(purchaseRequestId);
+        return histories.stream()
+                .map(approvalHistoryMapper::toResponse)
+                .toList();
+    }
+
+
+
+    @Transactional
+    public PurchaseRequestResponse approvePurchaseRequest(UUID id) {
+        User currentUser = securityService.getCurrentUser();
+        log.info("Approve purchase request {} by user: {}", id, currentUser.getEmail());
+
+        PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+
+        purchaseRequest.setStatus(PurchaseRequestStatus.APPROVED);
+        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        return purchaseRequestMapper.toPurchaseRequestResponse(saved);
+    }
+
+    @Transactional
+    public PurchaseRequestResponse rejectPurchaseRequest(UUID id) {
+        User currentUser = securityService.getCurrentUser();
+        log.info("Rejecting purchase request {} by user: {}", id, currentUser.getEmail());
+
+        PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+
+        purchaseRequest.setStatus(PurchaseRequestStatus.REJECTED);
+        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        return purchaseRequestMapper.toPurchaseRequestResponse(saved);
+    }
+
 
     // ============ Helper Methods ============
     public PurchaseRequest findPurchaseRequestById(UUID id) {
@@ -145,28 +205,19 @@ public class PurchaseRequestService {
         purchaseRequest.setTotalAmount(totalAmount);
     }
 
-    public List<ApprovalHistoryResponse> getApprovalHistories(UUID purchaseRequestId) {
-        findPurchaseRequestById(purchaseRequestId);
-        List<ApprovalHistory> histories = approvalHistoryRepository
-                .findByPrId(purchaseRequestId);
-        return histories.stream()
-                .map(approvalHistoryMapper::toResponse)
-                .toList();
-    }
-
-    @Transactional
-    public PurchaseRequestResponse submitPurchaseRequest(UUID id) {
-        User currentUser = securityService.getCurrentUser();
-        log.info("Submitting purchase request {} by user: {}", id, currentUser.getEmail());
-
-        PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
-
-        if (purchaseRequest.getStatus() != PurchaseRequestStatus.DRAFT) {
-            throw new IllegalStateException("Only DRAFT purchase requests can be submitted");
+    private PurchaseRequestStatus getPendingApprovalStatus(Role role) {
+        if (role == null || role.getName() == null) {
+            throw new IllegalStateException("Current user role is not configured");
         }
 
-        purchaseRequest.setStatus(PurchaseRequestStatus.SUBMITTED);
-        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
-        return purchaseRequestMapper.toPurchaseRequestResponse(saved);
+        return switch (role.getName()) {
+            case "MANAGER" -> PurchaseRequestStatus.SUBMITTED;
+            case "APPROVER" -> PurchaseRequestStatus.MANAGER_APPROVED;
+            default -> throw new IllegalStateException("Only MANAGER or APPROVER can view pending approvals");
+        };
     }
+
+
+
+
 }

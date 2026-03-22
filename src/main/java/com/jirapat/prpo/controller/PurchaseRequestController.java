@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -86,6 +87,28 @@ public class PurchaseRequestController {
     @GetMapping("/{id}/approval-history")
     public ResponseEntity<ApiResponse<List<ApprovalHistoryResponse>>> getApprovalHistory(@PathVariable UUID id) {
         List<ApprovalHistoryResponse> response = purchaseRequestService.getApprovalHistories(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<PurchaseRequestResponse>> approvePurchaseRequest(@PathVariable UUID id) {
+        PurchaseRequestResponse response = purchaseRequestService.approvePurchaseRequest(id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Purchase request approved successfully"));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<PurchaseRequestResponse>> rejectPurchaseRequest(@PathVariable UUID id) {
+        PurchaseRequestResponse response = purchaseRequestService.rejectPurchaseRequest(id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Purchase request rejected successfully"));
+    }
+
+
+    @GetMapping("/pending-approval")
+    @PreAuthorize("hasAnyRole('MANAGER', 'APPROVER')")
+    public ResponseEntity<ApiResponse<Page<PurchaseRequestResponse>>> getAllPendingApproval (
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<PurchaseRequestResponse> response = purchaseRequestService.getPendingApproval(pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
