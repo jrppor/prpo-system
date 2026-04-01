@@ -76,7 +76,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8091
+  port: 8099
 
 logging:
   level:
@@ -113,7 +113,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: ${SERVER_PORT:8091}
+  port: ${SERVER_PORT:8099}
 
 logging:
   level:

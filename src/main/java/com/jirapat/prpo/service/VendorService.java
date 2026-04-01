@@ -15,32 +15,33 @@ import com.jirapat.prpo.exception.ResourceNotFoundException;
 import com.jirapat.prpo.mapper.VendorMapper;
 import com.jirapat.prpo.repository.VendorRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class VendorService {
 
     private final VendorRepository vendorRepository;
     private final VendorMapper vendorMapper;
     private final SecurityService securityService;
-    
 
+    @Transactional(readOnly = true)
     public Page<VendorResponse> getAllVendors(Pageable pageable) {
         return vendorRepository.findAll(pageable)
                 .map(vendorMapper::toVendorResponse);
     }
 
+    @Transactional(readOnly = true)
     public VendorResponse getVendorById(UUID id) {
         log.info("Fetching vendor by id: {}", id);
         Vendor vendor = findVendorById(id);
         return vendorMapper.toVendorResponse(vendor);
     }
 
-    @Transactional
     public VendorResponse createVendor(CreateVendorRequest request) {
         String vendorName = request.getName().toUpperCase().trim();
         log.info("Creating new vendor: {}", vendorName);
@@ -57,7 +58,6 @@ public class VendorService {
         return vendorMapper.toVendorResponse(savedVendor);
     }
 
-    @Transactional
     public VendorResponse updateVendor(UUID id, UpdateVendorRequest request) {
         log.info("Updating vendor: {}", id);
         Vendor vendor = findVendorById(id);
@@ -77,7 +77,6 @@ public class VendorService {
         return vendorMapper.toVendorResponse(savedVendor);
     }
 
-    @Transactional
     public void deleteVendor(UUID id) {
         log.info("Deleting vendor: {}", id);
         Vendor vendor = findVendorById(id);
@@ -89,10 +88,5 @@ public class VendorService {
     public Vendor findVendorById(UUID id) {
         return vendorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", id.toString()));
-    }
-
-    public Vendor findVendorByName(String name) {
-        return vendorRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "name", name));
     }
 }
