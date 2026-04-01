@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class PurchaseRequestService {
 
     private final PurchaseRequestRepository purchaseRequestRepository;
@@ -43,17 +44,20 @@ public class PurchaseRequestService {
     private final SecurityService securityService;
     private final jakarta.persistence.EntityManager entityManager;
 
+    @Transactional(readOnly = true)
     public Page<PurchaseRequestResponse> getAllPurchaseRequests(Pageable pageable) {
         return purchaseRequestRepository.findAll(pageable)
                 .map(purchaseRequestMapper::toListResponse);
     }
 
+    @Transactional(readOnly = true)
     public PurchaseRequestResponse getPurchaseRequestById(UUID id) {
         log.info("Fetching Purchase request by id: {}", id);
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
         return purchaseRequestMapper.toPurchaseRequestResponse(purchaseRequest);
     }
 
+    @Transactional(readOnly = true)
     public Page<PurchaseRequestResponse> getPendingApproval(Pageable pageable) {
         User currentUser = securityService.getCurrentUser();
         PurchaseRequestStatus pendingStatus = getPendingApprovalStatus(currentUser.getRole());
@@ -62,7 +66,6 @@ public class PurchaseRequestService {
                 .map(purchaseRequestMapper::toListResponse);
     }
 
-    @Transactional
     public PurchaseRequestResponse createPurchaseRequest(CreatePurchaseRequestRequest request) {
         User currentUser = securityService.getCurrentUser();
         log.info("Creating purchase request by user: {}", currentUser.getEmail());
@@ -79,7 +82,6 @@ public class PurchaseRequestService {
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
-    @Transactional
     public PurchaseRequestResponse updatePurchaseRequest(UUID id, UpdatePurchaseRequestRequest request) {
         User currentUser = securityService.getCurrentUser();
         log.info("Updating purchase request {} by user: {}", id, currentUser.getEmail());
@@ -104,7 +106,6 @@ public class PurchaseRequestService {
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
-    @Transactional
     public void deletePurchaseRequest(UUID id) {
         log.info("Deleting purchase request: {}", id);
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
@@ -117,7 +118,6 @@ public class PurchaseRequestService {
         log.info("Purchase request deleted successfully: {}", id);
     }
 
-    @Transactional
     public PurchaseRequestResponse submitPurchaseRequest(UUID id) {
         User currentUser = securityService.getCurrentUser();
         log.info("Submitting purchase request {} by user: {}", id, currentUser.getEmail());
@@ -133,6 +133,7 @@ public class PurchaseRequestService {
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<ApprovalHistoryResponse> getApprovalHistories(UUID purchaseRequestId) {
         findPurchaseRequestById(purchaseRequestId);
         List<ApprovalHistory> histories = approvalHistoryRepository
@@ -142,9 +143,6 @@ public class PurchaseRequestService {
                 .toList();
     }
 
-
-
-    @Transactional
     public PurchaseRequestResponse approvePurchaseRequest(UUID id) {
         User currentUser = securityService.getCurrentUser();
         log.info("Approve purchase request {} by user: {}", id, currentUser.getEmail());
@@ -156,7 +154,6 @@ public class PurchaseRequestService {
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
-    @Transactional
     public PurchaseRequestResponse rejectPurchaseRequest(UUID id) {
         User currentUser = securityService.getCurrentUser();
         log.info("Rejecting purchase request {} by user: {}", id, currentUser.getEmail());
