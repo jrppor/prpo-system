@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 )
         ),
         servers = {
-                @Server(url = "http://localhost:8091", description = "Development Server"),
+                @Server(url = "http://localhost:8099", description = "Development Server"),
                 @Server(url = "https://api.jrppor.com", description = "Production Server")
         }
 )
