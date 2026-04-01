@@ -25,18 +25,5 @@ public class PurchaseRequestResponse {
     private LocalDate requiredDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<ItemResponse> items;
-
-    @Data
-    @Builder
-    public static class ItemResponse {
-        private UUID id;
-        private Integer itemNumber;
-        private String description;
-        private BigDecimal quantity;
-        private String unit;
-        private BigDecimal estimatedPrice;
-        private BigDecimal totalPrice;
-        private String remark;
-    }
+    private List<PurchaseRequestItemResponse> items;
 }
