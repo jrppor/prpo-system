@@ -21,7 +21,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8091
+  port: 8099
 
 logging:
   level:

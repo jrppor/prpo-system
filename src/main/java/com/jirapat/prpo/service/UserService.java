@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -35,9 +36,6 @@ public class UserService {
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
-    // ============ Admin Operations ============
-
-    @Transactional
     public UserResponse createUser(CreateUserRequest request) {
         log.info("Creating new user with email: {}", request.getEmail());
 
@@ -71,7 +69,6 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-    @Transactional
     public UserResponse updateUserRole(UUID id, UpdateRoleRequest request) {
         log.info("Updating role for user: {} to roleId: {}", id, request.getRoleId());
         User user = findUserById(id);
@@ -88,7 +85,6 @@ public class UserService {
         return userMapper.toUserResponse(savedUser);
     }
 
-    @Transactional
     public UserResponse updateUserActive(UUID id, UpdateActiveRequest request) {
         log.info("Updating active status for user: {} to {}", id, request.getIsActive());
         User user = findUserById(id);
@@ -104,8 +100,6 @@ public class UserService {
         return userMapper.toUserResponse(savedUser);
     }
 
-    // ============ Profile Operations ============
-
     @Transactional(readOnly = true)
     public UserResponse getMyProfile() {
         User currentUser = securityService.getCurrentUser();
@@ -113,7 +107,6 @@ public class UserService {
         return userMapper.toUserResponse(currentUser);
     }
 
-    @Transactional
     public UserResponse updateMyProfile(UpdateProfileRequest request) {
         User currentUser = securityService.getCurrentUser();
         log.info("Updating profile for user: {}", currentUser.getId());
@@ -125,8 +118,6 @@ public class UserService {
         log.info("Profile updated successfully for user: {}", savedUser.getId());
         return userMapper.toUserResponse(savedUser);
     }
-
-    // ============ Helper Methods ============
 
     private User findUserById(UUID id) {
         return userRepository.findById(id)
