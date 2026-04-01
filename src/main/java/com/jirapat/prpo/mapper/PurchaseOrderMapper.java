@@ -1,15 +1,22 @@
 package com.jirapat.prpo.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
+
 import com.jirapat.prpo.dto.request.CreatePurchaseOrderRequest;
 import com.jirapat.prpo.dto.request.PurchaseOrderItemRequest;
 import com.jirapat.prpo.dto.request.UpdatePurchaseOrderRequest;
+import com.jirapat.prpo.dto.response.PurchaseOrderItemResponse;
 import com.jirapat.prpo.dto.response.PurchaseOrderResponse;
+import com.jirapat.prpo.dto.response.PurchaseOrderSummaryResponse;
 import com.jirapat.prpo.entity.PurchaseOrder;
 import com.jirapat.prpo.entity.PurchaseOrderItem;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.User;
 import com.jirapat.prpo.entity.Vendor;
-import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PurchaseOrderMapper {
@@ -22,11 +29,12 @@ public interface PurchaseOrderMapper {
     @Mapping(source = "purchaseRequest", target = "purchaseRequestNumber", qualifiedByName = "prToNumber")
     @Mapping(source = "vendor", target = "vendorName", qualifiedByName = "vendorToName")
     @Mapping(source = "createdBy", target = "createdByName", qualifiedByName = "userToFullName")
-    @Mapping(target = "items", ignore = true)
     PurchaseOrderResponse toListResponse(PurchaseOrder purchaseOrder);
 
+    @Mapping(source = "vendor", target = "vendorName", qualifiedByName = "vendorToName")
+    PurchaseOrderSummaryResponse toSummaryResponse(PurchaseOrder purchaseOrder);
 
-    PurchaseOrderResponse.ItemResponse toItemResponse(PurchaseOrderItem item);
+    PurchaseOrderItemResponse toItemResponse(PurchaseOrderItem item);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "poNumber", ignore = true)
