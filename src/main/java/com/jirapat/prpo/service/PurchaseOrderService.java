@@ -17,6 +17,7 @@ import com.jirapat.prpo.dto.request.PurchaseOrderItemRequest;
 import com.jirapat.prpo.dto.request.UpdatePurchaseOrderRequest;
 import com.jirapat.prpo.dto.request.UpdatePurchaseOrderStatusRequest;
 import com.jirapat.prpo.dto.response.PurchaseOrderResponse;
+import com.jirapat.prpo.entity.NotificationType;
 import com.jirapat.prpo.entity.PurchaseOrder;
 import com.jirapat.prpo.entity.PurchaseOrderItem;
 import com.jirapat.prpo.entity.PurchaseOrderStatus;
@@ -44,6 +45,8 @@ public class PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderMapper purchaseOrderMapper;
     private final SecurityService securityService;
+    private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
     private final VendorRepository vendorRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final jakarta.persistence.EntityManager entityManager;
@@ -98,6 +101,7 @@ public class PurchaseOrderService {
          recalculateTotalAmount(purchaseOrder);
 
          PurchaseOrder saved = purchaseOrderRepository.save(purchaseOrder);
+         auditLogService.logCreate("PurchaseOrder", saved.getId(), saved.getPoNumber());
          return purchaseOrderMapper.toResponse(saved);
      }
 
@@ -137,6 +141,7 @@ public class PurchaseOrderService {
         recalculateTotalAmount(purchaseOrder);
 
         PurchaseOrder saved = purchaseOrderRepository.save(purchaseOrder);
+        auditLogService.logUpdate("PurchaseOrder", saved.getId(), null, saved.getPoNumber());
         return purchaseOrderMapper.toResponse(saved);
      }
 
@@ -161,6 +166,29 @@ public class PurchaseOrderService {
         }
 
         PurchaseOrder saved = purchaseOrderRepository.save(purchaseOrder);
+        auditLogService.logStatusChange("PurchaseOrder", id, currentStatus.name(), newStatus.name());
+
+        // Notify PR owner when PO status changes
+        if (saved.getPurchaseRequest() != null) {
+            NotificationType notifType = switch (newStatus) {
+                case SENT -> NotificationType.PO_SENT;
+                case RECEIVED -> NotificationType.PO_RECEIVED;
+                case COMPLETED -> NotificationType.PO_COMPLETED;
+                case CANCELLED -> NotificationType.PO_CANCELLED;
+                default -> null;
+            };
+            if (notifType != null) {
+                notificationService.send(
+                        saved.getPurchaseRequest().getRequester(),
+                        notifType,
+                        "PO สถานะเปลี่ยน: " + saved.getPoNumber(),
+                        "PO " + saved.getPoNumber() + " เปลี่ยนสถานะเป็น " + newStatus.name(),
+                        "PurchaseOrder",
+                        saved.getId()
+                );
+            }
+        }
+
         log.info("Purchase order status updated: {} -> {}", currentStatus, newStatus);
         return purchaseOrderMapper.toResponse(saved);
      }
@@ -206,6 +234,19 @@ public class PurchaseOrderService {
         recalculateTotalAmount(purchaseOrder);
 
         PurchaseOrder saved = purchaseOrderRepository.save(purchaseOrder);
+        auditLogService.logCreate("PurchaseOrder", saved.getId(), saved.getPoNumber());
+
+        if (pr.getRequester() != null) {
+            notificationService.send(
+                    pr.getRequester(),
+                    NotificationType.PO_CREATED,
+                    "PO สร้างจาก PR: " + pr.getPrNumber(),
+                    "PO " + saved.getPoNumber() + " ถูกสร้างจาก PR " + pr.getPrNumber(),
+                    "PurchaseOrder",
+                    saved.getId()
+            );
+        }
+
         log.info("Purchase order created from PR: {} -> {}", pr.getPrNumber(), saved.getPoNumber());
         return purchaseOrderMapper.toResponse(saved);
      }
@@ -220,6 +261,7 @@ public class PurchaseOrderService {
         }
 
         purchaseOrderRepository.delete(purchaseOrder);
+        auditLogService.logDelete("PurchaseOrder", id, purchaseOrder.getPoNumber());
          log.info("Purchase order deleted successfully: {}", id);
      }
 
