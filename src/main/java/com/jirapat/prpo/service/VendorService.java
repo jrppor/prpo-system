@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.jirapat.prpo.dto.request.CreateVendorRequest;
 import com.jirapat.prpo.dto.request.UpdateVendorRequest;
@@ -14,10 +16,10 @@ import com.jirapat.prpo.exception.DuplicateResourceException;
 import com.jirapat.prpo.exception.ResourceNotFoundException;
 import com.jirapat.prpo.mapper.VendorMapper;
 import com.jirapat.prpo.repository.VendorRepository;
+import com.jirapat.prpo.repository.specification.VendorSpecification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +32,18 @@ public class VendorService {
     private final SecurityService securityService;
 
     @Transactional(readOnly = true)
-    public Page<VendorResponse> getAllVendors(Pageable pageable) {
-        return vendorRepository.findAll(pageable)
+    public Page<VendorResponse> getAllVendors(
+        String code,
+        String vendorName,
+        String taxId,
+        Pageable pageable) {
+
+        Specification<Vendor> spec = Specification
+            .where(VendorSpecification.hasCode(code))
+            .and(VendorSpecification.searchByKeyword(vendorName))
+            .and(VendorSpecification.hasTax(taxId));
+
+        return vendorRepository.findAll(spec, pageable)
                 .map(vendorMapper::toVendorResponse);
     }
 
