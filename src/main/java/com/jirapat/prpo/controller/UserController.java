@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jirapat.prpo.dto.request.CreateUserRequest;
@@ -75,8 +76,9 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "ดูรายชื่อผู้ใช้ทั้งหมด", description = "ดึงรายชื่อผู้ใช้ทั้งหมด (เฉพาะ Admin)")
     public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
+            @RequestParam(required = false) String email,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<UserResponse> response = userService.getAllUsers(pageable);
+        Page<UserResponse> response = userService.getAllUsers(email, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

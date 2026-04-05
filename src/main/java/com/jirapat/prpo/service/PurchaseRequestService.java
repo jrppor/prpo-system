@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import com.jirapat.prpo.mapper.ApprovalHistoryMapper;
 import com.jirapat.prpo.mapper.PurchaseRequestMapper;
 import com.jirapat.prpo.repository.ApprovalHistoryRepository;
 import com.jirapat.prpo.repository.PurchaseRequestRepository;
+import com.jirapat.prpo.repository.specification.PurchaseRequestSpecification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +47,22 @@ public class PurchaseRequestService {
     private final jakarta.persistence.EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    public Page<PurchaseRequestResponse> getAllPurchaseRequests(Pageable pageable) {
-        return purchaseRequestRepository.findAll(pageable)
+    public Page<PurchaseRequestResponse> getAllPurchaseRequests(
+            PurchaseRequestStatus status,
+            String department,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            String search,
+            Pageable pageable) {
+
+        Specification<PurchaseRequest> spec = Specification
+                .where(PurchaseRequestSpecification.hasStatus(status))
+                .and(PurchaseRequestSpecification.hasDepartment(department))
+                .and(PurchaseRequestSpecification.createdAfter(dateFrom))
+                .and(PurchaseRequestSpecification.createdBefore(dateTo))
+                .and(PurchaseRequestSpecification.searchByKeyword(search));
+
+        return purchaseRequestRepository.findAll(spec, pageable)
                 .map(purchaseRequestMapper::toListResponse);
     }
 
