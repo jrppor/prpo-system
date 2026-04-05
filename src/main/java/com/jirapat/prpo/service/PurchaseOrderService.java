@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import com.jirapat.prpo.mapper.PurchaseOrderMapper;
 import com.jirapat.prpo.repository.PurchaseOrderRepository;
 import com.jirapat.prpo.repository.PurchaseRequestRepository;
 import com.jirapat.prpo.repository.VendorRepository;
+import com.jirapat.prpo.repository.specification.PurchaseOrderSpecification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +49,21 @@ public class PurchaseOrderService {
     private final jakarta.persistence.EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    public Page<PurchaseOrderResponse> getAllPurchaseOrders(Pageable pageable) {
-        return purchaseOrderRepository.findAll(pageable)
+    public Page<PurchaseOrderResponse> getAllPurchaseOrders(
+        PurchaseOrderStatus status,
+        LocalDate dateFrom,
+        LocalDate dateTo,
+        String search,
+        Pageable pageable
+    ) {
+
+        Specification<PurchaseOrder> spec = Specification
+        .where(PurchaseOrderSpecification.hasStatus(status))
+        .and(PurchaseOrderSpecification.createdAfter(dateFrom))
+        .and(PurchaseOrderSpecification.createdBefore(dateTo))
+        .and(PurchaseOrderSpecification.searchByKeyword(search));
+
+        return purchaseOrderRepository.findAll(spec, pageable)
                 .map(purchaseOrderMapper::toListResponse);
     }
 
