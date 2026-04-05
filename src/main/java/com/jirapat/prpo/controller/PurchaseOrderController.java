@@ -1,6 +1,8 @@
 package com.jirapat.prpo.controller;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -8,7 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +32,7 @@ import com.jirapat.prpo.dto.request.UpdatePurchaseOrderStatusRequest;
 import com.jirapat.prpo.dto.response.ApiResponse;
 import com.jirapat.prpo.dto.response.PurchaseOrderResponse;
 import com.jirapat.prpo.entity.PurchaseOrderStatus;
+import com.jirapat.prpo.service.PurchaseOrderExcelExportService;
 import com.jirapat.prpo.service.PurchaseOrderService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -43,6 +48,24 @@ import lombok.RequiredArgsConstructor;
 public class PurchaseOrderController {
 
     private final PurchaseOrderService purchaseOrderService;
+    private final PurchaseOrderExcelExportService excelExportService;
+
+    @GetMapping("/export") 
+    public ResponseEntity<byte[]> exportPurchaseOrders(
+            @RequestParam(required = false) PurchaseOrderStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) String search
+    ) throws IOException {
+        byte[] excelBytes = excelExportService.exportToExcel(status, dateFrom, dateTo, search);
+        String filename = "purchase-orders-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentLength(excelBytes.length)
+                .body(excelBytes);
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PurchaseOrderResponse>>> getAllPurchaseOrders(
@@ -53,13 +76,13 @@ public class PurchaseOrderController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<PurchaseOrderResponse> response = purchaseOrderService.getAllPurchaseOrders(
-            status,
-            dateFrom,
-            dateTo,
-            search,
-            pageable
+                status,
+                dateFrom,
+                dateTo,
+                search,
+                pageable
         );
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
