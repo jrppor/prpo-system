@@ -9,6 +9,7 @@ import org.mapstruct.ReportingPolicy;
 import com.jirapat.prpo.dto.request.CreatePurchaseRequestRequest;
 import com.jirapat.prpo.dto.request.PurchaseRequestItemRequest;
 import com.jirapat.prpo.dto.request.UpdatePurchaseRequestRequest;
+import com.jirapat.prpo.dto.response.PurchaseRequestItemResponse;
 import com.jirapat.prpo.dto.response.PurchaseRequestResponse;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.PurchaseRequestItem;
@@ -21,10 +22,9 @@ public interface PurchaseRequestMapper {
     PurchaseRequestResponse toPurchaseRequestResponse(PurchaseRequest purchaseRequest);
 
     @Mapping(source = "requester", target = "requester", qualifiedByName = "userToFullName")
-    @Mapping(target = "items", ignore = true)
     PurchaseRequestResponse toListResponse(PurchaseRequest purchaseRequest);
 
-    PurchaseRequestResponse.ItemResponse toItemResponse(PurchaseRequestItem item);
+    PurchaseRequestItemResponse toItemResponse(PurchaseRequestItem item);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "prNumber", ignore = true)

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import com.jirapat.prpo.exception.DuplicateResourceException;
 import com.jirapat.prpo.exception.ResourceNotFoundException;
 import com.jirapat.prpo.mapper.UserMapper;
 import com.jirapat.prpo.repository.UserRepository;
+import com.jirapat.prpo.repository.specification.UserSpecification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,9 +58,13 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Page<UserResponse> getAllUsers(Pageable pageable) {
+    public Page<UserResponse> getAllUsers(String email ,Pageable pageable) {
         log.info("Fetching all users, page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return userRepository.findAll(pageable)
+
+        Specification<User> spec = Specification
+        .where(UserSpecification.hasEmail(email));
+
+        return userRepository.findAll(spec, pageable)
                 .map(userMapper::toUserResponse);
     }
 
