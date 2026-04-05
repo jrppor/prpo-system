@@ -1,6 +1,8 @@
 package com.jirapat.prpo.controller;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +33,7 @@ import com.jirapat.prpo.dto.response.ApiResponse;
 import com.jirapat.prpo.dto.response.ApprovalHistoryResponse;
 import com.jirapat.prpo.dto.response.PurchaseRequestResponse;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
+import com.jirapat.prpo.service.PurchaseRequestExcelExportService;
 import com.jirapat.prpo.service.PurchaseRequestService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -45,6 +50,25 @@ public class PurchaseRequestController {
 
 
     private final PurchaseRequestService purchaseRequestService;
+    private final PurchaseRequestExcelExportService excelExportService;
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportPurchaseRequests(
+            @RequestParam(required = false) PurchaseRequestStatus status,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) String search
+    ) throws IOException {
+        byte[] excelBytes = excelExportService.exportToExcel(status, department, dateFrom, dateTo, search);
+        String filename = "purchase-requests-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentLength(excelBytes.length)
+                .body(excelBytes);
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PurchaseRequestResponse>>> getAllPurchaseRequests (
