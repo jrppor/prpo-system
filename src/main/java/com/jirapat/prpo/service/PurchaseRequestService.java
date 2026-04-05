@@ -17,6 +17,7 @@ import com.jirapat.prpo.dto.request.UpdatePurchaseRequestRequest;
 import com.jirapat.prpo.dto.response.ApprovalHistoryResponse;
 import com.jirapat.prpo.dto.response.PurchaseRequestResponse;
 import com.jirapat.prpo.entity.ApprovalHistory;
+import com.jirapat.prpo.entity.NotificationType;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.PurchaseRequestItem;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
@@ -44,6 +45,8 @@ public class PurchaseRequestService {
     private final PurchaseRequestMapper purchaseRequestMapper;
     private final ApprovalHistoryMapper approvalHistoryMapper;
     private final SecurityService securityService;
+    private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
     private final jakarta.persistence.EntityManager entityManager;
 
     @Transactional(readOnly = true)
@@ -95,6 +98,7 @@ public class PurchaseRequestService {
         recalculateTotalAmount(purchaseRequest);
 
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.logCreate("PurchaseRequest", saved.getId(), saved.getPrNumber());
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
@@ -119,6 +123,7 @@ public class PurchaseRequestService {
         recalculateTotalAmount(purchaseRequest);
 
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.logUpdate("PurchaseRequest", saved.getId(), null, saved.getPrNumber());
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
@@ -131,6 +136,7 @@ public class PurchaseRequestService {
         }
 
         purchaseRequestRepository.delete(purchaseRequest);
+        auditLogService.logDelete("PurchaseRequest", id, purchaseRequest.getPrNumber());
         log.info("Purchase request deleted successfully: {}", id);
     }
 
@@ -146,6 +152,7 @@ public class PurchaseRequestService {
 
         purchaseRequest.setStatus(PurchaseRequestStatus.SUBMITTED);
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.logStatusChange("PurchaseRequest", id, "DRAFT", "SUBMITTED");
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
@@ -165,8 +172,18 @@ public class PurchaseRequestService {
 
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
 
+        String oldStatus = purchaseRequest.getStatus().name();
         purchaseRequest.setStatus(PurchaseRequestStatus.APPROVED);
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.logStatusChange("PurchaseRequest", id, oldStatus, "APPROVED");
+        notificationService.send(
+                purchaseRequest.getRequester(),
+                NotificationType.PR_APPROVED,
+                "PR อนุมัติแล้ว: " + purchaseRequest.getPrNumber(),
+                "PR " + purchaseRequest.getTitle() + " ได้รับการอนุมัติ",
+                "PurchaseRequest",
+                purchaseRequest.getId()
+        );
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
@@ -176,8 +193,18 @@ public class PurchaseRequestService {
 
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
 
+        String oldStatus = purchaseRequest.getStatus().name();
         purchaseRequest.setStatus(PurchaseRequestStatus.REJECTED);
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.logStatusChange("PurchaseRequest", id, oldStatus, "REJECTED");
+        notificationService.send(
+                purchaseRequest.getRequester(),
+                NotificationType.PR_REJECTED,
+                "PR ถูกปฏิเสธ: " + purchaseRequest.getPrNumber(),
+                "PR " + purchaseRequest.getTitle() + " ถูกปฏิเสธ",
+                "PurchaseRequest",
+                purchaseRequest.getId()
+        );
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
 
