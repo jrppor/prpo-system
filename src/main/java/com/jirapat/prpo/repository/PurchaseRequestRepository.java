@@ -34,8 +34,7 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
     @EntityGraph(attributePaths = "requester")
     Page<PurchaseRequest> findByStatus(PurchaseRequestStatus status, Pageable pageable);
 
-    // @Query("SELECT pr FROM PurchaseRequest pr JOIN FETCH pr.requester")
-    // Page<PurchaseRequest> findAllWithRequester(Pageable pageable);
+    long countByStatus(PurchaseRequestStatus status);
 
     @Query(value = "SELECT nextval('pr_number_seq')", nativeQuery = true)
     Long getNextPrNumberSequence();
