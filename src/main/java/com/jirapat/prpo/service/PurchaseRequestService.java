@@ -21,6 +21,7 @@ import com.jirapat.prpo.entity.NotificationType;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.PurchaseRequestItem;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
+import com.jirapat.prpo.entity.ReferenceType;
 import com.jirapat.prpo.entity.Role;
 import com.jirapat.prpo.entity.User;
 import com.jirapat.prpo.exception.ResourceNotFoundException;
@@ -47,6 +48,7 @@ public class PurchaseRequestService {
     private final SecurityService securityService;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final AttachmentService attachmentService;
     private final jakarta.persistence.EntityManager entityManager;
 
     @Transactional(readOnly = true)
@@ -73,7 +75,10 @@ public class PurchaseRequestService {
     public PurchaseRequestResponse getPurchaseRequestById(UUID id) {
         log.info("Fetching Purchase request by id: {}", id);
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
-        return purchaseRequestMapper.toPurchaseRequestResponse(purchaseRequest);
+        PurchaseRequestResponse response = purchaseRequestMapper.toPurchaseRequestResponse(purchaseRequest);
+        response.setAttachments(attachmentService.getAttachmentsByReference(
+                ReferenceType.PURCHASE_REQUEST, id));
+        return response;
     }
 
     @Transactional(readOnly = true)

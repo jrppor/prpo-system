@@ -34,6 +34,8 @@ app:
     secret: ${JWT_SECRET}
     expiration: 3600000
     refresh-expiration: 86400000
+  upload:
+    directory: ${UPLOAD_DIR:/opt/prpo/uploads}
   mail:
     enabled: ${MAIL_ENABLED:true}
     from: ${MAIL_FROM:noreply@prpo-system.com}

@@ -23,6 +23,7 @@ import com.jirapat.prpo.entity.PurchaseOrderItem;
 import com.jirapat.prpo.entity.PurchaseOrderStatus;
 import com.jirapat.prpo.entity.PurchaseRequest;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
+import com.jirapat.prpo.entity.ReferenceType;
 import com.jirapat.prpo.entity.User;
 import com.jirapat.prpo.entity.Vendor;
 import com.jirapat.prpo.exception.BadRequestException;
@@ -47,6 +48,7 @@ public class PurchaseOrderService {
     private final SecurityService securityService;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final AttachmentService attachmentService;
     private final VendorRepository vendorRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final jakarta.persistence.EntityManager entityManager;
@@ -74,7 +76,10 @@ public class PurchaseOrderService {
     public  PurchaseOrderResponse getPurchaseOrderById(UUID id) {
         log.info("Fetching Purchase order by id: {}", id);
         PurchaseOrder purchaseOrder = findPurchaseOrderById(id);
-        return purchaseOrderMapper.toResponse(purchaseOrder);
+        PurchaseOrderResponse response = purchaseOrderMapper.toResponse(purchaseOrder);
+        response.setAttachments(attachmentService.getAttachmentsByReference(
+                ReferenceType.PURCHASE_ORDER, id));
+        return response;
     }
 
      public  PurchaseOrderResponse createPurchaseOrder(CreatePurchaseOrderRequest request) {
