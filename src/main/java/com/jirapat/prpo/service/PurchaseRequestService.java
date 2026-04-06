@@ -135,9 +135,11 @@ public class PurchaseRequestService {
             throw new IllegalStateException("Only DRAFT purchase requests can be deleted");
         }
 
-        purchaseRequestRepository.delete(purchaseRequest);
+        purchaseRequest.softDelete();
+        purchaseRequest.getItems().forEach(PurchaseRequestItem::softDelete);
+        purchaseRequestRepository.save(purchaseRequest);
         auditLogService.logDelete("PurchaseRequest", id, purchaseRequest.getPrNumber());
-        log.info("Purchase request deleted successfully: {}", id);
+        log.info("Purchase request soft-deleted successfully: {}", id);
     }
 
     public PurchaseRequestResponse submitPurchaseRequest(UUID id) {

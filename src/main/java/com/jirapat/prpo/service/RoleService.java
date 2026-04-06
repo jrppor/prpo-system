@@ -82,8 +82,9 @@ public class RoleService {
     public void deleteRole(UUID id) {
         log.info("Deleting role: {}", id);
         Role role = findRoleById(id);
-        roleRepository.delete(role);
-        log.info("Role deleted successfully: {}", id);
+        role.softDelete();
+        roleRepository.save(role);
+        log.info("Role soft-deleted successfully: {}", id);
     }
 
     // ============ Helper Methods ============

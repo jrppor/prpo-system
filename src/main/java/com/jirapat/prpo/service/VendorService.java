@@ -92,8 +92,9 @@ public class VendorService {
     public void deleteVendor(UUID id) {
         log.info("Deleting vendor: {}", id);
         Vendor vendor = findVendorById(id);
-        vendorRepository.delete(vendor);
-        log.info("Vendor deleted successfully: {}", id);
+        vendor.softDelete();
+        vendorRepository.save(vendor);
+        log.info("Vendor soft-deleted successfully: {}", id);
     }
 
     // ============ Helper Methods ============

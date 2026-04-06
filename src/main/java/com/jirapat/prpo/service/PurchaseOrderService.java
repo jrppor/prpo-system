@@ -260,9 +260,11 @@ public class PurchaseOrderService {
             throw new IllegalStateException("Only DRAFT purchase order can be deleted");
         }
 
-        purchaseOrderRepository.delete(purchaseOrder);
+        purchaseOrder.softDelete();
+        purchaseOrder.getItems().forEach(PurchaseOrderItem::softDelete);
+        purchaseOrderRepository.save(purchaseOrder);
         auditLogService.logDelete("PurchaseOrder", id, purchaseOrder.getPoNumber());
-         log.info("Purchase order deleted successfully: {}", id);
+         log.info("Purchase order soft-deleted successfully: {}", id);
      }
 
      private PurchaseOrder findPurchaseOrderById(UUID id) {

@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="purchase_order"
+              pageWidth="595" pageHeight="842"
+              columnWidth="515"
+              leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40">
+
+    <parameter name="poNumber" class="java.lang.String"/>
+    <parameter name="purchaseRequestNumber" class="java.lang.String"/>
+    <parameter name="vendorName" class="java.lang.String"/>
+    <parameter name="createdByName" class="java.lang.String"/>
+    <parameter name="status" class="java.lang.String"/>
+    <parameter name="orderDate" class="java.lang.String"/>
+    <parameter name="expectedDeliveryDate" class="java.lang.String"/>
+    <parameter name="remark" class="java.lang.String"/>
+    <parameter name="totalAmount" class="java.lang.String"/>
+    <parameter name="createdAt" class="java.lang.String"/>
+    <parameter name="companyName" class="java.lang.String"/>
+
+    <field name="itemNumber" class="java.lang.Integer"/>
+    <field name="description" class="java.lang.String"/>
+    <field name="quantity" class="java.lang.String"/>
+    <field name="unit" class="java.lang.String"/>
+    <field name="unitPrice" class="java.lang.String"/>
+    <field name="totalPrice" class="java.lang.String"/>
+
+    <title>
+        <band height="145">
+            <staticText>
+                <reportElement x="0" y="0" width="515" height="30"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Purchase Order]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="30" width="515" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{companyName}]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="0" y="55" width="515" height="1"/>
+            </line>
+
+            <!-- Left column -->
+            <staticText>
+                <reportElement x="0" y="62" width="90" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[PO Number:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="90" y="62" width="160" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{poNumber}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="78" width="90" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[PR Reference:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="90" y="78" width="160" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{purchaseRequestNumber}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="94" width="90" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Vendor:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="90" y="94" width="160" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{vendorName}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="110" width="90" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Created By:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="90" y="110" width="160" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{createdByName}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="126" width="90" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Remark:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="90" y="126" width="160" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{remark}]]></textFieldExpression>
+            </textField>
+
+            <!-- Right column -->
+            <staticText>
+                <reportElement x="280" y="62" width="100" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Status:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="380" y="62" width="135" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{status}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="280" y="78" width="100" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Order Date:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="380" y="78" width="135" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{orderDate}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="280" y="94" width="100" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Expected Delivery:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="380" y="94" width="135" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{expectedDeliveryDate}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="280" y="110" width="100" height="16"/>
+                <textElement><font size="9" isBold="true"/></textElement>
+                <text><![CDATA[Created:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="380" y="110" width="135" height="16"/>
+                <textElement><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{createdAt}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="22">
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="35" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[#]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="35" y="0" width="200" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Description]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="235" y="0" width="60" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Qty]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="295" y="0" width="50" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Unit]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="345" y="0" width="85" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Unit Price]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="430" y="0" width="85" height="20" backcolor="#E0E0E0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <textField>
+                <reportElement x="0" y="0" width="35" height="16"/>
+                <box><pen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{itemNumber}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="35" y="0" width="200" height="16"/>
+                <box leftPadding="4"><pen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="235" y="0" width="60" height="16"/>
+                <box><pen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="295" y="0" width="50" height="16"/>
+                <box leftPadding="4"><pen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{unit}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="345" y="0" width="85" height="16"/>
+                <box rightPadding="4"><pen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{unitPrice}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="430" y="0" width="85" height="16"/>
+                <box rightPadding="4"><pen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{totalPrice}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="25">
+            <textField>
+                <reportElement x="0" y="5" width="260" height="15"/>
+                <textElement><font size="7" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA["Generated: " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date())]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="400" y="5" width="115" height="15"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="50">
+            <line>
+                <reportElement x="0" y="5" width="515" height="1"/>
+            </line>
+            <staticText>
+                <reportElement x="345" y="10" width="85" height="20"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="430" y="10" width="85" height="20"/>
+                <box rightPadding="4"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalAmount}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

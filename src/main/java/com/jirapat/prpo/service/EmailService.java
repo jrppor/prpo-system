@@ -19,13 +19,13 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${app.mail.enabled:false}")
+    @Value("${app.mail.enabled}")
     private boolean mailEnabled;
 
-    @Value("${app.mail.from:noreply@prpo-system.com}")
+    @Value("${app.mail.from}")
     private String fromAddress;
 
-    @Value("${app.mail.subject-prefix:[PRPO] }")
+    @Value("${app.mail.subject-prefix}")
     private String subjectPrefix;
 
     @Async

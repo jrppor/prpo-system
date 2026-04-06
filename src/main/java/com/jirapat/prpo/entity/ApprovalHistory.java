@@ -2,6 +2,8 @@ package com.jirapat.prpo.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +20,7 @@ import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "approval_history")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @SuperBuilder
