@@ -1,5 +1,7 @@
 package com.jirapat.prpo.entity;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -14,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @Table(name="vendors", indexes= {
         @Index(name = "idx_vendor_name", columnList = "name")
 })
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @SuperBuilder
@@ -21,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class Vendor extends BaseEntity {
 
-    @Column(nullable=false, unique=true, length=20)
+    @Column(nullable=false, length=20)
     private String code;
 
     @Column(nullable=false, length=255)

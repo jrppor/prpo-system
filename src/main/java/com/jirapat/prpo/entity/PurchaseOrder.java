@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +25,7 @@ import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "purchase_orders")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @SuperBuilder
@@ -30,7 +33,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class PurchaseOrder extends BaseEntity {
 
-    @Column(name = "po_number", nullable = false, unique = true, length = 20)
+    @Column(name = "po_number", nullable = false, length = 20)
     private String poNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
