@@ -29,4 +29,5 @@ public class PurchaseOrderResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<PurchaseOrderItemResponse> items;
+    private List<AttachmentResponse> attachments;
 }
