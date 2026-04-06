@@ -34,6 +34,7 @@ import com.jirapat.prpo.dto.response.ApprovalHistoryResponse;
 import com.jirapat.prpo.dto.response.PurchaseRequestResponse;
 import com.jirapat.prpo.entity.PurchaseRequestStatus;
 import com.jirapat.prpo.service.PurchaseRequestExcelExportService;
+import com.jirapat.prpo.service.PurchaseRequestPdfExportService;
 import com.jirapat.prpo.service.PurchaseRequestService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -51,6 +52,7 @@ public class PurchaseRequestController {
 
     private final PurchaseRequestService purchaseRequestService;
     private final PurchaseRequestExcelExportService excelExportService;
+    private final PurchaseRequestPdfExportService pdfExportService;
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportPurchaseRequests(
@@ -68,6 +70,18 @@ public class PurchaseRequestController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .contentLength(excelBytes.length)
                 .body(excelBytes);
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> exportPurchaseRequestPdf(@PathVariable UUID id) {
+        byte[] pdfBytes = pdfExportService.exportToPdf(id);
+        String filename = "PR-" + id + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdfBytes.length)
+                .body(pdfBytes);
     }
 
     @GetMapping

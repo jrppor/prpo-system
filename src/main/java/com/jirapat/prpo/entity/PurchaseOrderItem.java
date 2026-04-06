@@ -2,6 +2,8 @@ package com.jirapat.prpo.entity;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "purchase_order_items")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @SuperBuilder

@@ -1,6 +1,3 @@
-# ============================================
-# Development Profile Configuration
-# ============================================
 spring:
   datasource:
     url: jdbc:postgresql://127.0.0.1:5434/purchase_db
@@ -14,9 +11,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
@@ -31,11 +25,23 @@ spring:
 server:
   port: 8099
 app:
+  openapi:
+    server-url: http://localhost:8099
+    server-description: Development Server
+  cors:
+    allowed-origins:
+      - http://localhost:4200
+  jwt:
+    secret: bXlTdXBlclNlY3JldEtleUZvckpXVFRva2VuR2VuZXJhdGlvblRoYXRJc0F0TGVhc3QyNTZCaXRzTG9uZzEyMzQ1Njc4OTA=
+    expiration: 86400000
+    refresh-expiration: 604800000
   mail:
     enabled: true
+    from: noreply@prpo-system.com
 logging:
   level:
     com.jirapat.prpo: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
