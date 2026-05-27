@@ -31,6 +31,7 @@ app:
   cors:
     allowed-origins:
       - http://localhost:4200
+      - http://localhost:5173
   jwt:
     secret: bXlTdXBlclNlY3JldEtleUZvckpXVFRva2VuR2VuZXJhdGlvblRoYXRJc0F0TGVhc3QyNTZCaXRzTG9uZzEyMzQ1Njc4OTA=
     expiration: 86400000

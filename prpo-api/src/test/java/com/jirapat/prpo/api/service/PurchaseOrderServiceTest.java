@@ -1,28 +1,12 @@
 package com.jirapat.prpo.api.service;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.jirapat.prpo.api.dto.request.UpdatePurchaseOrderStatusRequest;
 import com.jirapat.prpo.api.dto.response.PurchaseOrderResponse;
@@ -41,8 +25,22 @@ import com.jirapat.prpo.api.mapper.PurchaseOrderMapper;
 import com.jirapat.prpo.api.repository.PurchaseOrderRepository;
 import com.jirapat.prpo.api.repository.PurchaseRequestRepository;
 import com.jirapat.prpo.api.repository.VendorRepository;
-
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PurchaseOrderService Unit Tests")
@@ -53,6 +51,7 @@ class PurchaseOrderServiceTest {
     @Mock private SecurityService securityService;
     @Mock private AuditLogService auditLogService;
     @Mock private NotificationService notificationService;
+    @Mock private AttachmentService attachmentService;
     @Mock private VendorRepository vendorRepository;
     @Mock private PurchaseRequestRepository purchaseRequestRepository;
     @Mock private EntityManager entityManager;
@@ -112,6 +111,7 @@ class PurchaseOrderServiceTest {
         void getById_Found_Returns() {
             when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(testPo));
             when(purchaseOrderMapper.toResponse(testPo)).thenReturn(testPoResponse);
+            when(attachmentService.getAttachmentsByReference(any(), eq(poId))).thenReturn(List.of());
 
             PurchaseOrderResponse result = purchaseOrderService.getPurchaseOrderById(poId);
 

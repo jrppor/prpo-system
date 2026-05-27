@@ -10,7 +10,8 @@ import com.jirapat.prpo.api.entity.ApprovalHistory;
 
 public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory, UUID> {
 
-    @Query("SELECT ah FROM ApprovalHistory ah JOIN FETCH ah.approver WHERE ah.purchaseRequest.id = :prId ORDER BY ah.approvalLevel ASC")
+
+    @Query("SELECT ah FROM ApprovalHistory ah LEFT JOIN FETCH ah.approver WHERE ah.purchaseRequest.id = :prId ORDER BY ah.approvalLevel ASC")
     List<ApprovalHistory> findByPrId(UUID prId);
     //findByPurchaseRequestIdOrderByApprovalLevelAsc
 }

@@ -2,6 +2,7 @@ package com.jirapat.prpo.api.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +17,7 @@ import com.jirapat.prpo.api.dto.request.CreatePurchaseRequestRequest;
 import com.jirapat.prpo.api.dto.request.UpdatePurchaseRequestRequest;
 import com.jirapat.prpo.api.dto.response.ApprovalHistoryResponse;
 import com.jirapat.prpo.api.dto.response.PurchaseRequestResponse;
+import com.jirapat.prpo.api.entity.ApprovalAction;
 import com.jirapat.prpo.api.entity.ApprovalHistory;
 import com.jirapat.prpo.api.entity.NotificationType;
 import com.jirapat.prpo.api.entity.PurchaseRequest;
@@ -112,6 +114,7 @@ public class PurchaseRequestService {
         log.info("Updating purchase request {} by user: {}", id, currentUser.getEmail());
 
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+        securityService.verifyOwnershipOrAdmin(purchaseRequest.getRequester().getId());
 
         if (purchaseRequest.getStatus() != PurchaseRequestStatus.DRAFT) {
             throw new IllegalStateException("Only DRAFT purchase requests can be updated");
@@ -135,6 +138,7 @@ public class PurchaseRequestService {
     public void deletePurchaseRequest(UUID id) {
         log.info("Deleting purchase request: {}", id);
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+        securityService.verifyOwnershipOrAdmin(purchaseRequest.getRequester().getId());
 
         if (purchaseRequest.getStatus() != PurchaseRequestStatus.DRAFT) {
             throw new IllegalStateException("Only DRAFT purchase requests can be deleted");
@@ -173,37 +177,71 @@ public class PurchaseRequestService {
                 .toList();
     }
 
+
     public PurchaseRequestResponse approvePurchaseRequest(UUID id) {
         User currentUser = securityService.getCurrentUser();
         log.info("Approve purchase request {} by user: {}", id, currentUser.getEmail());
 
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+        PurchaseRequestStatus currentStatus = purchaseRequest.getStatus();
+        String roleName = currentUser.getRole() != null ? currentUser.getRole().getName() : null;
 
-        String oldStatus = purchaseRequest.getStatus().name();
-        purchaseRequest.setStatus(PurchaseRequestStatus.APPROVED);
+        PurchaseRequestStatus newStatus;
+        int approvalLevel;
+        if (currentStatus == PurchaseRequestStatus.SUBMITTED && "MANAGER".equals(roleName)) {
+            newStatus = PurchaseRequestStatus.MANAGER_APPROVED;
+            approvalLevel = 1;
+        } else if (currentStatus == PurchaseRequestStatus.MANAGER_APPROVED && "APPROVER".equals(roleName)) {
+            newStatus = PurchaseRequestStatus.APPROVED;
+            approvalLevel = 2;
+        } else {
+            throw new IllegalStateException(String.format(
+                    "Cannot approve purchase request in status %s as role %s", currentStatus, roleName));
+        }
+
+        purchaseRequest.setStatus(newStatus);
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
-        auditLogService.logStatusChange("PurchaseRequest", id, oldStatus, "APPROVED");
-        notificationService.send(
-                purchaseRequest.getRequester(),
-                NotificationType.PR_APPROVED,
-                "PR อนุมัติแล้ว: " + purchaseRequest.getPrNumber(),
-                "PR " + purchaseRequest.getTitle() + " ได้รับการอนุมัติ",
-                "PurchaseRequest",
-                purchaseRequest.getId()
-        );
+        auditLogService.logStatusChange("PurchaseRequest", id, currentStatus.name(), newStatus.name());
+        recordApprovalHistory(saved, currentUser, ApprovalAction.APPROVED, approvalLevel);
+
+        // แจ้งผู้ขอเฉพาะเมื่ออนุมัติครบทุกชั้นแล้ว (ชั้น MANAGER ยังไม่ถือว่าจบ)
+        if (newStatus == PurchaseRequestStatus.APPROVED) {
+            notificationService.send(
+                    purchaseRequest.getRequester(),
+                    NotificationType.PR_APPROVED,
+                    "PR อนุมัติแล้ว: " + purchaseRequest.getPrNumber(),
+                    "PR " + purchaseRequest.getTitle() + " ได้รับการอนุมัติ",
+                    "PurchaseRequest",
+                    purchaseRequest.getId()
+            );
+        }
         return purchaseRequestMapper.toPurchaseRequestResponse(saved);
     }
+
 
     public PurchaseRequestResponse rejectPurchaseRequest(UUID id) {
         User currentUser = securityService.getCurrentUser();
         log.info("Rejecting purchase request {} by user: {}", id, currentUser.getEmail());
 
         PurchaseRequest purchaseRequest = findPurchaseRequestById(id);
+        PurchaseRequestStatus currentStatus = purchaseRequest.getStatus();
+        String roleName = currentUser.getRole() != null ? currentUser.getRole().getName() : null;
 
-        String oldStatus = purchaseRequest.getStatus().name();
+        int approvalLevel;
+        if (currentStatus == PurchaseRequestStatus.SUBMITTED && "MANAGER".equals(roleName)) {
+            approvalLevel = 1;
+        } else if (currentStatus == PurchaseRequestStatus.MANAGER_APPROVED && "APPROVER".equals(roleName)) {
+            approvalLevel = 2;
+        } else {
+            throw new IllegalStateException(String.format(
+                    "Cannot reject purchase request in status %s as role %s", currentStatus, roleName));
+        }
+
         purchaseRequest.setStatus(PurchaseRequestStatus.REJECTED);
         PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
-        auditLogService.logStatusChange("PurchaseRequest", id, oldStatus, "REJECTED");
+        auditLogService.logStatusChange("PurchaseRequest", id, currentStatus.name(), "REJECTED");
+        recordApprovalHistory(saved, currentUser, ApprovalAction.REJECTED, approvalLevel);
+
         notificationService.send(
                 purchaseRequest.getRequester(),
                 NotificationType.PR_REJECTED,
@@ -220,6 +258,18 @@ public class PurchaseRequestService {
     public PurchaseRequest findPurchaseRequestById(UUID id) {
         return purchaseRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PurchaseRequest", "id", id.toString()));
+    }
+
+    private void recordApprovalHistory(PurchaseRequest purchaseRequest, User approver,
+            ApprovalAction action, int approvalLevel) {
+        ApprovalHistory history = ApprovalHistory.builder()
+                .purchaseRequest(purchaseRequest)
+                .approver(approver)
+                .action(action)
+                .approvalLevel(approvalLevel)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        approvalHistoryRepository.save(history);
     }
 
     private String generatePrNumber() {

@@ -33,6 +33,10 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
 
     long countByStatus(PurchaseOrderStatus status);
 
+    boolean existsByPurchaseRequestId(UUID purchaseRequestId);
+
+    boolean existsByPurchaseRequestIdAndIdNot(UUID purchaseRequestId, UUID purchaseOrderId);
+
     @Query("SELECT COALESCE(SUM(po.totalAmount), 0) FROM PurchaseOrder po WHERE po.createdAt BETWEEN :from AND :to")
     BigDecimal sumTotalAmountByDateRange(LocalDateTime from, LocalDateTime to);
 

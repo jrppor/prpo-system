@@ -139,12 +139,14 @@ public class PurchaseRequestController {
     }
 
     @PatchMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('MANAGER', 'APPROVER')")
     public ResponseEntity<ApiResponse<PurchaseRequestResponse>> approvePurchaseRequest(@PathVariable UUID id) {
         PurchaseRequestResponse response = purchaseRequestService.approvePurchaseRequest(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Purchase request approved successfully"));
     }
 
     @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('MANAGER', 'APPROVER')")
     public ResponseEntity<ApiResponse<PurchaseRequestResponse>> rejectPurchaseRequest(@PathVariable UUID id) {
         PurchaseRequestResponse response = purchaseRequestService.rejectPurchaseRequest(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Purchase request rejected successfully"));

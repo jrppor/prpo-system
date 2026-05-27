@@ -95,6 +95,7 @@ public class PurchaseOrderService {
         if (request.getPurchaseRequestId() != null) {
             PurchaseRequest pr = purchaseRequestRepository.findById(request.getPurchaseRequestId())
                     .orElseThrow(() -> new ResourceNotFoundException("PurchaseRequest", "id", request.getPurchaseRequestId().toString()));
+            verifyPrNotConverted(request.getPurchaseRequestId(), null);
             purchaseOrder.setPurchaseRequest(pr);
         }
 
@@ -133,6 +134,7 @@ public class PurchaseOrderService {
         if (request.getPurchaseRequestId() != null) {
             PurchaseRequest pr = purchaseRequestRepository.findById(request.getPurchaseRequestId())
                     .orElseThrow(() -> new ResourceNotFoundException("PurchaseRequest", "id", request.getPurchaseRequestId().toString()));
+            verifyPrNotConverted(request.getPurchaseRequestId(), id);
             purchaseOrder.setPurchaseRequest(pr);
         } else {
             purchaseOrder.setPurchaseRequest(null);
@@ -209,6 +211,8 @@ public class PurchaseOrderService {
             throw new BadRequestException("Only APPROVED purchase requests can be converted to PO");
         }
 
+        verifyPrNotConverted(prId, null);
+
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", vendorId.toString()));
 
@@ -276,6 +280,18 @@ public class PurchaseOrderService {
         return purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id.toString()));
      }
+
+
+    private void verifyPrNotConverted(UUID purchaseRequestId, UUID excludePurchaseOrderId) {
+        boolean alreadyConverted = excludePurchaseOrderId == null
+                ? purchaseOrderRepository.existsByPurchaseRequestId(purchaseRequestId)
+                : purchaseOrderRepository.existsByPurchaseRequestIdAndIdNot(
+                        purchaseRequestId, excludePurchaseOrderId);
+        if (alreadyConverted) {
+            throw new BadRequestException(
+                    "This purchase request has already been converted to a purchase order");
+        }
+    }
 
     private void validateStatusTransition(PurchaseOrderStatus current, PurchaseOrderStatus target) {
         boolean valid = switch (current) {

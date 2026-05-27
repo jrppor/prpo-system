@@ -1,0 +1,9 @@
+/.sonar/
+**/target/
+**/.env
+**/*.log
+**/logs/
+**/uploads/
+.idea/
+.vscode/
+*.iml

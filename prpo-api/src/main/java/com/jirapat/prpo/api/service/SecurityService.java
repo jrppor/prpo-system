@@ -40,6 +40,19 @@ public class SecurityService {
         }
     }
 
+    public void verifyOwnershipOrAdmin(UUID resourceOwnerId) {
+        User currentUser = getCurrentUser();
+        boolean isAdmin = currentUser.getRole() != null
+                && "ADMIN".equals(currentUser.getRole().getName());
+        if (isAdmin) {
+            return;
+        }
+        if (!currentUser.getId().equals(resourceOwnerId)) {
+            throw new UnauthorizedException(
+                    "You don't have permission to modify this resource");
+        }
+    }
+
     public boolean isOwner(UUID resourceOwnerId) {
         try {
             UUID currentUserId = getCurrentUserId();

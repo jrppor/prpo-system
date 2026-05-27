@@ -40,7 +40,7 @@ public class TokenBucket {
     }
 
     public boolean isExpired(long maxIdleNanos) {
-        return (System.nanoTime() - lastAccessTimestamp) > maxIdleNanos;
+        return (System.nanoTime() - lastAccessTimestamp) >= maxIdleNanos;
     }
 
     private void refill() {

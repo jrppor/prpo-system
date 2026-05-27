@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:prpo_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+
+app:
+  openapi:
+    server-url: http://localhost
+    server-description: Test
+  cors:
+    allowed-origins:
+      - http://localhost
+  jwt:
+    secret: bXlTdXBlclNlY3JldEtleUZvckpXVFRva2VuR2VuZXJhdGlvblRoYXRJc0F0TGVhc3QyNTZCaXRzTG9uZzEyMzQ1Njc4OTA=
+    expiration: 86400000
+    refresh-expiration: 604800000
+  mail:
+    enabled: false
+    from: noreply@prpo-system.com

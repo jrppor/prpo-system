@@ -1,44 +1,44 @@
 package com.jirapat.prpo.api.service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.jirapat.prpo.api.dto.request.CreatePurchaseRequestRequest;
 import com.jirapat.prpo.api.dto.request.PurchaseRequestItemRequest;
 import com.jirapat.prpo.api.dto.response.PurchaseRequestResponse;
-import com.jirapat.prpo.api.entity.NotificationType;
 import com.jirapat.prpo.api.entity.PurchaseRequest;
 import com.jirapat.prpo.api.entity.PurchaseRequestItem;
 import com.jirapat.prpo.api.entity.PurchaseRequestStatus;
 import com.jirapat.prpo.api.entity.Role;
 import com.jirapat.prpo.api.entity.User;
 import com.jirapat.prpo.api.exception.ResourceNotFoundException;
+import com.jirapat.prpo.api.exception.UnauthorizedException;
 import com.jirapat.prpo.api.mapper.ApprovalHistoryMapper;
 import com.jirapat.prpo.api.mapper.PurchaseRequestMapper;
 import com.jirapat.prpo.api.repository.ApprovalHistoryRepository;
 import com.jirapat.prpo.api.repository.PurchaseRequestRepository;
-
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PurchaseRequestService Unit Tests")
@@ -51,6 +51,7 @@ class PurchaseRequestServiceTest {
     @Mock private SecurityService securityService;
     @Mock private AuditLogService auditLogService;
     @Mock private NotificationService notificationService;
+    @Mock private AttachmentService attachmentService;
     @Mock private EntityManager entityManager;
 
     @InjectMocks
@@ -103,6 +104,7 @@ class PurchaseRequestServiceTest {
         void getById_Found_Returns() {
             when(purchaseRequestRepository.findById(prId)).thenReturn(Optional.of(testPr));
             when(purchaseRequestMapper.toPurchaseRequestResponse(testPr)).thenReturn(testPrResponse);
+            when(attachmentService.getAttachmentsByReference(any(), eq(prId))).thenReturn(List.of());
 
             PurchaseRequestResponse result = purchaseRequestService.getPurchaseRequestById(prId);
 
@@ -181,6 +183,7 @@ class PurchaseRequestServiceTest {
             purchaseRequestService.deletePurchaseRequest(prId);
 
             assertThat(testPr.getDeletedAt()).isNotNull();
+            verify(securityService).verifyOwnershipOrAdmin(testPr.getRequester().getId());
             verify(purchaseRequestRepository).save(testPr);
             verify(auditLogService).logDelete(eq("PurchaseRequest"), eq(prId), anyString());
         }
@@ -228,49 +231,36 @@ class PurchaseRequestServiceTest {
     }
 
     @Nested
-    @DisplayName("approvePurchaseRequest()")
-    class ApproveTests {
+    @DisplayName("update/delete — ownership check")
+    class OwnershipTests {
 
         @Test
-        @DisplayName("should approve and notify requester")
-        void approve_Valid_ApprovesAndNotifies() {
-            testPr.setStatus(PurchaseRequestStatus.SUBMITTED);
+        @DisplayName("delete โดยผู้ที่ไม่ใช่เจ้าของ/ADMIN ถูกปฏิเสธ และไม่มีการ save")
+        void delete_byNonOwner_throws() {
+            when(purchaseRequestRepository.findById(prId)).thenReturn(Optional.of(testPr));
+            doThrow(new UnauthorizedException("no permission"))
+                    .when(securityService).verifyOwnershipOrAdmin(testPr.getRequester().getId());
+
+            assertThatThrownBy(() -> purchaseRequestService.deletePurchaseRequest(prId))
+                    .isInstanceOf(UnauthorizedException.class);
+            verify(purchaseRequestRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("update โดยผู้ที่ไม่ใช่เจ้าของ/ADMIN ถูกปฏิเสธ และไม่มีการ save")
+        void update_byNonOwner_throws() {
             when(securityService.getCurrentUser()).thenReturn(currentUser);
             when(purchaseRequestRepository.findById(prId)).thenReturn(Optional.of(testPr));
-            when(purchaseRequestRepository.save(testPr)).thenReturn(testPr);
-            when(purchaseRequestMapper.toPurchaseRequestResponse(testPr)).thenReturn(testPrResponse);
+            doThrow(new UnauthorizedException("no permission"))
+                    .when(securityService).verifyOwnershipOrAdmin(testPr.getRequester().getId());
 
-            purchaseRequestService.approvePurchaseRequest(prId);
-
-            assertThat(testPr.getStatus()).isEqualTo(PurchaseRequestStatus.APPROVED);
-            verify(auditLogService).logStatusChange("PurchaseRequest", prId, "SUBMITTED", "APPROVED");
-            verify(notificationService).send(
-                    eq(currentUser), eq(NotificationType.PR_APPROVED),
-                    anyString(), anyString(), eq("PurchaseRequest"), eq(prId));
+            assertThatThrownBy(() -> purchaseRequestService.updatePurchaseRequest(prId, null))
+                    .isInstanceOf(UnauthorizedException.class);
+            verify(purchaseRequestRepository, never()).save(any());
         }
     }
 
-    @Nested
-    @DisplayName("rejectPurchaseRequest()")
-    class RejectTests {
-
-        @Test
-        @DisplayName("should reject and notify requester")
-        void reject_Valid_RejectsAndNotifies() {
-            testPr.setStatus(PurchaseRequestStatus.SUBMITTED);
-            when(securityService.getCurrentUser()).thenReturn(currentUser);
-            when(purchaseRequestRepository.findById(prId)).thenReturn(Optional.of(testPr));
-            when(purchaseRequestRepository.save(testPr)).thenReturn(testPr);
-            when(purchaseRequestMapper.toPurchaseRequestResponse(testPr)).thenReturn(testPrResponse);
-
-            purchaseRequestService.rejectPurchaseRequest(prId);
-
-            assertThat(testPr.getStatus()).isEqualTo(PurchaseRequestStatus.REJECTED);
-            verify(notificationService).send(
-                    eq(currentUser), eq(NotificationType.PR_REJECTED),
-                    anyString(), anyString(), eq("PurchaseRequest"), eq(prId));
-        }
-    }
+    // หมายเหตุ: approve/reject ครอบคลุมใน PurchaseRequestApprovalFlowTest (workflow 2 ชั้น)
 
     @Nested
     @DisplayName("getPendingApproval()")

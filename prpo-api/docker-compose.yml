@@ -1,0 +1,52 @@
+services:
+  prpo-api:
+    image: ${PRPO_API_IMAGE:-prpo-api:latest}
+    container_name: prpo-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8099
+      DB_HOST: ${DB_HOST:-postgresql}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-prpo_api}
+      DB_USERNAME: ${DB_USERNAME:-prpo_api}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-https://prpo-api.161.97.121.162.sslip.io}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://prpo-api.161.97.121.162.sslip.io}
+      SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED:-true}
+      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED:-true}
+      UPLOAD_DIR: /opt/prpo/uploads
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@prpo-system.com}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_STARTTLS_ENABLE: ${MAIL_STARTTLS_ENABLE:-false}
+    volumes:
+      - prpo_api_uploads:/opt/prpo/uploads
+      - prpo_api_logs:/app/logs
+    networks:
+      - traefik-net
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-net
+      traefik.http.routers.prpo-api.rule: Host(`${PRPO_API_HOST:-prpo-api.161.97.121.162.sslip.io}`)
+      traefik.http.routers.prpo-api.entrypoints: websecure
+      traefik.http.routers.prpo-api.tls: "true"
+      traefik.http.routers.prpo-api.tls.certresolver: letsencrypt
+      traefik.http.services.prpo-api.loadbalancer.server.port: "8099"
+      com.jrppor.service: prpo-api
+      com.jrppor.environment: prod
+      com.jrppor.logging.enabled: "true"
+      co.elastic.logs/enabled: "true"
+
+networks:
+  traefik-net:
+    external: true
+
+volumes:
+  prpo_api_uploads:
+  prpo_api_logs:

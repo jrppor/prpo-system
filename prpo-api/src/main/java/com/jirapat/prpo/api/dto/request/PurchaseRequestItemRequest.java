@@ -2,8 +2,11 @@ package com.jirapat.prpo.api.dto.request;
 
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,11 +24,15 @@ public class PurchaseRequestItemRequest {
     private String description;
 
     @NotNull(message = "Quantity is required")
+    @Positive(message = "Quantity must be greater than zero")
+    @Digits(integer = 13, fraction = 2, message = "Quantity is out of allowed range")
     private BigDecimal quantity;
 
     @Size(max = 50, message = "Unit must not exceed 50 characters")
     private String unit;
 
+    @PositiveOrZero(message = "Estimated price must not be negative")
+    @Digits(integer = 13, fraction = 2, message = "Estimated price is out of allowed range")
     private BigDecimal estimatedPrice;
 
     @Size(max = 500, message = "Remark must not exceed 500 characters")

@@ -11,16 +11,16 @@ spring:
       ddl-auto: validate
     show-sql: false
   mail:
-    host: ${MAIL_HOST}
+    host: ${MAIL_HOST:mailpit}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
+            enable: ${MAIL_STARTTLS_ENABLE:true}
 server:
   port: ${SERVER_PORT:8099}
 app:
@@ -37,7 +37,7 @@ app:
   upload:
     directory: ${UPLOAD_DIR:/opt/prpo/uploads}
   mail:
-    enabled: ${MAIL_ENABLED:true}
+    enabled: ${MAIL_ENABLED:false}
     from: ${MAIL_FROM:noreply@prpo-system.com}
 logging:
   level:
@@ -45,12 +45,19 @@ logging:
     org.springframework.security: WARN
   file:
     name: logs/application.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{requestId:-}] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 14
+      total-size-cap: 1GB
 management:
   endpoint:
     health:
       show-details: when-authorized
 springdoc:
   api-docs:
-    enabled: false
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
   swagger-ui:
-    enabled: false
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
